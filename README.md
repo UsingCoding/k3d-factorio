@@ -2,7 +2,7 @@
 
 K3d setup with factorio headless server running as Pod in k3s cluster with prometheus and grafana
 
-## Referee
+## References
 
 - [k3s](https://github.com/k3s-io/k3s) - Lightweight Kubernetes
 - [k3d](https://github.com/k3d-io/k3d) - Dockerized k3s 
