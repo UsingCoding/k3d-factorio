@@ -1,0 +1,13 @@
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: traefik
+  namespace: kube-system
+spec:
+  valuesContent: |-
+    ports:
+      factorio-udp:
+        port: 34197
+        expose: true
+        exposedPort: 34197
+        protocol: UDP

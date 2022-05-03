@@ -1,0 +1,100 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: grafana-host-volume
+  namespace: monitoring
+  labels:
+    directory: grafana
+spec:
+  capacity:
+    storage: 5Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: slow
+  hostPath:
+    path: /data/grafana
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: grafana-host-claim
+  namespace: monitoring
+spec:
+  storageClassName: slow
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  selector:
+    matchLabels:
+      directory: grafana
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: monitoring
+  labels:
+    app: grafana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+        name: grafana
+    spec:
+      initContainers:
+        - name: grafana-chown
+          image: busybox:latest
+          imagePullPolicy: IfNotPresent
+          command: [chown, -R, "472:472", /var/lib/grafana]
+          volumeMounts:
+            - name: grafana-host-volume
+              mountPath: "/var/lib/grafana"
+      containers:
+      - name: grafana
+        image: grafana/grafana
+        imagePullPolicy: Always
+        volumeMounts:
+        - name: grafana-host-volume
+          mountPath: "/var/lib/grafana"
+      volumes:
+      - name: grafana-host-volume
+        persistentVolumeClaim:
+          claimName: grafana-host-claim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-service
+  namespace: monitoring
+spec:
+  selector:
+    app: grafana
+  ports:
+  - port: 3000
+    name: grafana
+    protocol: TCP
+    targetPort: 3000
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: grafana-route
+  namespace: monitoring
+spec:
+  entryPoints:
+    - web
+  routes:
+  - match: Host(`grafana.factorio.project`)
+    kind: Rule
+    services:
+    - name: grafana-service
+      port: 3000

@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: factorio
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: factorio
+  namespace: factorio
+  labels:
+    app: factorio
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: factorio
+  template:
+    metadata:
+      labels:
+        app: factorio
+        name: factorio
+    spec:
+      containers:
+        - name: factorio-headless
+          image: factoriotools/factorio:1.1.57
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: factorio-host-volume
+              mountPath: "/factorio"
+          ports:
+            - name: upd
+              containerPort: 34197
+              protocol: UDP
+            - name: tcp
+              containerPort: 27015
+              protocol: TCP
+
+      volumes:
+        - name: factorio-host-volume
+          persistentVolumeClaim:
+            claimName: factorio-host-claim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: factorio-service
+  namespace: factorio
+spec:
+  selector:
+    app: factorio
+  ports:
+    - port: 34197
+      name: factorio-udp
+      protocol: UDP
+      targetPort: 34197
