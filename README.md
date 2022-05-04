@@ -32,3 +32,8 @@ kubectl apply -f kubernetes/factorio
 ```shell
 kubectl apply -f kubernetes/monitoring
 ```
+
+## Access factorio
+
+ - Run factorio
+ - Multiplayer -> Connect to address -> localhost:34197 -> Connect  
